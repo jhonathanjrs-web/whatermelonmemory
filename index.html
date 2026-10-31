@@ -392,7 +392,7 @@
             <label class="field-label" for="reward-file">Elige una imagen de tu dispositivo</label>
             <input id="reward-file" type="file" accept="image/*">
           </div>
-          <p class="privacy-note" id="reward-note">Ilustraciones originales incluidas; funcionan sin conexión.</p>
+          <p class="privacy-note" id="reward-note">Ilustraciones originales en assets/recompensas; funcionan sin conexión.</p>
         </section>
       </aside>
     </div>
@@ -415,10 +415,10 @@
       const rewardNote = document.getElementById("reward-note");
       const rewardSettingsKey = "memoria-en-foco-reward-settings";
       const rewardScenes = [
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="a" x2="1" y2="1"><stop stop-color="#f8b4c8"/><stop offset="1" stop-color="#7663d8"/></linearGradient></defs><rect width="640" height="640" fill="url(#a)"/><circle cx="320" cy="320" r="180" fill="#fff" opacity=".22"/><path d="M320 95l44 137 137-44-80 120 120 80-145-12-12 145-56-134-134 56 70-128-128-70 145 12z" fill="#fff" opacity=".85"/><circle cx="320" cy="320" r="54" fill="#ffd66b"/></svg>`,
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#99e2d0"/><stop offset="1" stop-color="#4f86c6"/></linearGradient></defs><rect width="640" height="640" fill="url(#b)"/><circle cx="476" cy="142" r="72" fill="#fff2b0"/><path d="M0 465l145-182 108 126 116-178 271 235v174H0z" fill="#345b74" opacity=".8"/><path d="M0 510l166-111 121 105 135-122 218 143v104H0z" fill="#274b52"/><path d="M0 557q160-45 320 5t320-2v80H0z" fill="#f3d9a5"/></svg>`,
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="c" x2="1" y2="1"><stop stop-color="#ffe29a"/><stop offset="1" stop-color="#ff9a8b"/></linearGradient></defs><rect width="640" height="640" fill="url(#c)"/><circle cx="320" cy="320" r="205" fill="#fff" opacity=".2"/><path d="M320 134c-35 77-112 94-112 177 0 49 37 83 82 79-46 65-42 122 30 134 72-12 76-69 30-134 45 4 82-30 82-79 0-83-77-100-112-177z" fill="#fff8e6"/><path d="M320 262c-38 37-54 70-54 105a54 54 0 00108 0c0-35-16-68-54-105z" fill="#f48c72"/></svg>`,
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="d" x2="0" y2="1"><stop stop-color="#b9a7f8"/><stop offset="1" stop-color="#f6c6d0"/></linearGradient></defs><rect width="640" height="640" fill="url(#d)"/><circle cx="320" cy="320" r="190" fill="#fff" opacity=".3"/><g fill="#fff"><path d="M320 158c28 48 52 68 103 76-37 37-47 65-36 116-48-28-79-28-127 0 11-51 1-79-36-116 51-8 75-28 96-76z"/><path d="M150 365c20 34 37 48 73 54-26 26-33 46-25 82-34-20-56-20-90 0 8-36 1-56-25-82 36-6 53-20 67-54z"/><path d="M490 365c20 34 37 48 73 54-26 26-33 46-25 82-34-20-56-20-90 0 8-36 1-56-25-82 36-6 53-20 67-54z"/></g><circle cx="320" cy="320" r="42" fill="#ffd66b"/></svg>`
+        "assets/recompensas/recompensa-estrella.svg",
+        "assets/recompensas/recompensa-paisaje.svg",
+        "assets/recompensas/recompensa-llama.svg",
+        "assets/recompensas/recompensa-destellos.svg"
       ];
 
       const cells = [];
@@ -596,8 +596,7 @@
       }
 
       function createScene() {
-        const svg = rewardScenes[Math.floor(Math.random() * rewardScenes.length)];
-        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+        return rewardScenes[Math.floor(Math.random() * rewardScenes.length)];
       }
 
       function updateRewardFields() {
@@ -610,7 +609,7 @@
         } else if (rewardType.value === "message") {
           rewardNote.textContent = "Tu mensaje se guarda solo en este navegador.";
         } else {
-          rewardNote.textContent = "Ilustraciones originales incluidas; funcionan sin conexión.";
+          rewardNote.textContent = "Ilustraciones originales en assets/recompensas; funcionan sin conexión.";
         }
       }
 
