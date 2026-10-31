@@ -152,7 +152,7 @@
       transition: opacity .35s ease, transform .35s ease;
     }
     .reward-view.visible { opacity: 1; transform: scale(1); }
-    .reward-view img { width: 100%; height: 100%; object-fit: cover; }
+    .reward-view img { width: 100%; height: 100%; object-fit: contain; }
     .reward-message {
       max-width: 90%;
       color: #51409c;
@@ -392,7 +392,7 @@
             <label class="field-label" for="reward-file">Elige una imagen de tu dispositivo</label>
             <input id="reward-file" type="file" accept="image/*">
           </div>
-          <p class="privacy-note" id="reward-note">Ilustraciones originales en assets/recompensas; funcionan sin conexión.</p>
+          <p class="privacy-note" id="reward-note">Fotografías sorpresa incluidas; funcionan sin conexión.</p>
         </section>
       </aside>
     </div>
@@ -415,10 +415,9 @@
       const rewardNote = document.getElementById("reward-note");
       const rewardSettingsKey = "memoria-en-foco-reward-settings";
       const rewardScenes = [
-        "assets/recompensas/recompensa-estrella.svg",
-        "assets/recompensas/recompensa-paisaje.svg",
-        "assets/recompensas/recompensa-llama.svg",
-        "assets/recompensas/recompensa-destellos.svg"
+        "assets/recompensas/recompensa-1.jpg",
+        "assets/recompensas/recompensa-2.png",
+        "assets/recompensas/recompensa-3.jpg"
       ];
 
       const cells = [];
@@ -587,7 +586,7 @@
             rewardView.appendChild(text);
           } else {
             const image = document.createElement("img");
-            image.alt = rewardType.value === "image" ? "Tu imagen de recompensa" : "Ilustración sorpresa";
+            image.alt = rewardType.value === "image" ? "Tu imagen de recompensa" : "Fotografía sorpresa de recompensa";
             image.src = customImage || createScene();
             rewardView.appendChild(image);
           }
@@ -609,7 +608,7 @@
         } else if (rewardType.value === "message") {
           rewardNote.textContent = "Tu mensaje se guarda solo en este navegador.";
         } else {
-          rewardNote.textContent = "Ilustraciones originales en assets/recompensas; funcionan sin conexión.";
+          rewardNote.textContent = "Fotografías sorpresa incluidas; funcionan sin conexión.";
         }
       }
 
