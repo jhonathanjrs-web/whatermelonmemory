@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Memoria en foco</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17233c;
+      --muted: #74809a;
+      --purple: #7658e8;
+      --purple-dark: #6142d5;
+      --line: #e7eaf2;
+      --surface: #fff;
+      --background: #f5f7fb;
+      --cell: #edf0f7;
+      --green: #2eaa7a;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 18% 0%, #ece8ff 0, transparent 34rem),
+        var(--background);
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .page {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 38px 0 52px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 14px;
+      color: white;
+      background: var(--purple);
+      box-shadow: 0 8px 18px #7658e83b;
+      font-size: 21px;
+    }
+    .brand-name { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+    .brand-caption { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .top-tag {
+      padding: 9px 13px;
+      border: 1px solid #e6e2fb;
+      border-radius: 999px;
+      color: #6951ca;
+      background: #fff9;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .intro { margin-bottom: 24px; }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--purple);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(27px, 4vw, 36px); letter-spacing: -1.4px; }
+    .intro p:last-child { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      align-items: start;
+      gap: 20px;
+    }
+    .card {
+      border: 1px solid #e9ebf2;
+      border-radius: 20px;
+      background: var(--surface);
+      box-shadow: 0 12px 35px #28345a0a;
+    }
+
+    .game-card { padding: 22px; }
+    .game-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-label { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .stat-value { margin-top: 4px; font-size: 19px; font-weight: 800; }
+    .stat-value small { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .attempt-badge {
+      padding: 8px 11px;
+      border-radius: 10px;
+      color: #6b58c7;
+      background: #f2efff;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .board-frame {
+      position: relative;
+      display: grid;
+      width: min(100%, 470px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      padding: clamp(8px, 2vw, 14px);
+      border: 1px solid #e9ebf3;
+      border-radius: 17px;
+      background: #fafbfe;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      grid-template-rows: repeat(8, minmax(0, 1fr));
+      gap: clamp(4px, 1vw, 8px);
+      transition: opacity .35s ease;
+    }
+    .board.revealed { opacity: 0; }
+    .reward-view {
+      position: absolute;
+      inset: clamp(8px, 2vw, 14px);
+      display: grid;
+      overflow: hidden;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(140deg, #f8f3ff, #e6f8f2);
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(.96);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .reward-view.visible { opacity: 1; transform: scale(1); }
+    .reward-view img { width: 100%; height: 100%; object-fit: cover; }
+    .reward-message {
+      max-width: 90%;
+      color: #51409c;
+      font-size: clamp(19px, 4vw, 32px);
+      font-weight: 800;
+      line-height: 1.25;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .share-status { min-height: 18px; margin: 8px 0 0; color: var(--muted); text-align: center; font-size: 11px; }
+    .cell {
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      border-radius: clamp(4px, 1vw, 8px);
+      background: var(--cell);
+      transition: background .16s ease, transform .16s ease, box-shadow .16s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cell:focus-visible { outline: 3px solid #ad9df6; outline-offset: 2px; }
+    .cell:disabled { cursor: default; }
+    .cell.lit {
+      background: #927cf1;
+      box-shadow: inset 0 0 0 1px #ffffff40, 0 3px 10px #7658e83d;
+      transform: scale(.94);
+    }
+    .cell.chosen { background: #c8bdfb; }
+    .cell.correct { background: #68c99e; }
+    .cell.wrong { background: #f18d91; }
+
+    .message {
+      min-height: 22px;
+      margin: 15px 0 10px;
+      color: #59647b;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .message.error { color: #c3515b; }
+    .message.success { color: #22855e; }
+    .game-actions { display: flex; justify-content: center; gap: 9px; }
+    .button {
+      min-height: 42px;
+      padding: 0 17px;
+      border: 0;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 750;
+      transition: background .15s, transform .15s;
+    }
+    .button:hover { transform: translateY(-1px); }
+    .button-primary { color: #fff; background: var(--purple); }
+    .button-primary:hover { background: var(--purple-dark); }
+    .button-secondary { color: #59647b; background: #f0f2f7; }
+    .button:disabled { cursor: not-allowed; opacity: .48; transform: none; }
+
+    .side-column { display: grid; gap: 16px; }
+    .score-card { padding: 20px; }
+    .card-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    h2 { margin: 0; font-size: 15px; letter-spacing: -.25px; }
+    .trophy { font-size: 18px; }
+    .record {
+      padding: 15px;
+      border: 1px solid #eee9ff;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f8f6ff, #f2efff);
+    }
+    .record-label { color: #8173bd; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+    .record-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+    .record-name { overflow: hidden; font-size: 16px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .record-score { color: var(--purple-dark); font-size: 13px; font-weight: 800; white-space: nowrap; }
+    .record-date { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .empty-record { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .leaderboard { margin-top: 18px; }
+    .leaderboard-title {
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+    .score-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid #f0f1f5;
+      font-size: 12px;
+    }
+    .score-person { display: flex; min-width: 0; align-items: center; gap: 9px; }
+    .rank { width: 18px; color: #8d96a8; font-size: 11px; font-weight: 800; text-align: center; }
+    .score-name { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .score-points { color: #5b6680; font-weight: 800; white-space: nowrap; }
+
+    .name-card { padding: 17px 19px; }
+    .name-card label { display: block; margin-bottom: 9px; font-size: 12px; font-weight: 750; }
+    .name-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 11px;
+      border: 1px solid #e3e6ee;
+      border-radius: 10px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      font-size: 13px;
+    }
+    .name-input:focus { border-color: #9c8aef; box-shadow: 0 0 0 3px #7658e81a; }
+    .privacy-note { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .reward-settings { padding: 18px 19px; }
+    .reward-settings h2 { margin-bottom: 12px; }
+    .setting-toggle { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; }
+    .setting-toggle input { accent-color: var(--purple); }
+    .reward-settings label.field-label { display: block; margin: 13px 0 6px; color: #59647b; font-size: 11px; font-weight: 700; }
+    .reward-settings select, .reward-settings textarea, .reward-settings input[type="file"] {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #e3e6ee;
+      border-radius: 9px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      font-size: 12px;
+    }
+    .reward-settings textarea { min-height: 62px; resize: vertical; }
+    .reward-settings [hidden] { display: none !important; }
+    .reward-settings .privacy-note { margin-top: 9px; }
+    footer { margin-top: 22px; color: #8992a4; text-align: center; font-size: 11px; }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 24px, 520px); padding-top: 22px; }
+      header { margin-bottom: 23px; }
+      .top-tag { padding: 7px 10px; font-size: 10px; }
+      .layout { grid-template-columns: 1fr; }
+      .game-card { padding: 15px; }
+      .side-column { grid-template-columns: 1fr; }
+      .board-frame { width: min(100%, 420px); }
+      .intro p:last-child { max-width: 380px; line-height: 1.5; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div>
+          <div class="brand-name">Memoria en foco</div>
+          <div class="brand-caption">Un entrenamiento para tu mente</div>
+        </div>
+      </div>
+      <div class="top-tag">8 × 8 · Atención y memoria</div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">Tu reto diario</p>
+      <h1 id="page-title">¿Cuántas puedes recordar?</h1>
+      <p>Observa las casillas iluminadas y selecciónalas de memoria. Cada ronda sube el nivel.</p>
+    </section>
+
+    <div class="layout">
+      <section class="card game-card" aria-label="Juego de memoria">
+        <div class="game-top">
+          <div>
+            <div class="stat-label">NIVEL</div>
+            <div class="stat-value"><span id="level">1</span> <small id="level-detail">· 3 casillas</small></div>
+          </div>
+          <div class="attempt-badge" id="attempts" aria-live="polite">Intento 1 de 2</div>
+          <div style="text-align:right">
+            <div class="stat-label">RACHA</div>
+            <div class="stat-value"><span id="streak">0</span> <small>rondas</small></div>
+          </div>
+        </div>
+
+        <div class="board-frame">
+          <div class="board" id="board" role="group" aria-label="Cuadrícula de 8 por 8"></div>
+          <div class="reward-view" id="reward-view" aria-live="polite"></div>
+        </div>
+        <p class="message" id="message" aria-live="polite">Pulsa «Empezar» cuando estés listo.</p>
+        <div class="game-actions">
+          <button class="button button-primary" id="start-button" type="button">Empezar</button>
+          <button class="button button-secondary" id="clear-button" type="button" disabled>Limpiar</button>
+        </div>
+        <div class="game-actions" id="share-actions" hidden>
+          <button class="button button-secondary" id="share-button" type="button">Compartir resultado</button>
+        </div>
+        <p class="share-status" id="share-status" aria-live="polite"></p>
+      </section>
+
+      <aside class="side-column" aria-label="Récords">
+        <section class="card score-card">
+          <div class="card-heading">
+            <h2>Tabla de récords</h2>
+            <span class="trophy" aria-hidden="true">🏆</span>
+          </div>
+          <div class="record" id="record">
+            <div class="record-label">Mejor récord</div>
+            <p class="empty-record">¡Juega una partida para inaugurar la tabla!</p>
+          </div>
+          <div class="leaderboard" id="leaderboard" aria-live="polite"></div>
+        </section>
+
+        <section class="card name-card">
+          <label for="player-name">Tu nombre para la tabla</label>
+          <input class="name-input" id="player-name" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="nickname">
+          <p class="privacy-note">Los récords se guardan solo en este navegador.</p>
+        </section>
+
+        <section class="card reward-settings" aria-labelledby="reward-title">
+          <h2 id="reward-title">Recompensa al acertar</h2>
+          <label class="setting-toggle" for="reward-enabled">
+            <input id="reward-enabled" type="checkbox" checked>
+            Mostrar recompensa tras cada acierto
+          </label>
+          <label class="field-label" for="reward-type">Tipo de recompensa</label>
+          <select id="reward-type">
+            <option value="gallery">Imagen sorpresa</option>
+            <option value="message">Mi mensaje</option>
+            <option value="image">Mi imagen</option>
+          </select>
+          <div id="reward-message-field" hidden>
+            <label class="field-label" for="reward-text">Tu mensaje</label>
+            <textarea id="reward-text" maxlength="180" placeholder="¡Lo lograste! Sigue así."></textarea>
+          </div>
+          <div id="reward-image-field" hidden>
+            <label class="field-label" for="reward-file">Elige una imagen de tu dispositivo</label>
+            <input id="reward-file" type="file" accept="image/*">
+          </div>
+          <p class="privacy-note" id="reward-note">Ilustraciones originales incluidas; funcionan sin conexión.</p>
+        </section>
+      </aside>
+    </div>
+    <footer>Concéntrate, observa y confía en tu memoria.</footer>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "memoria-en-foco-scores";
+      const board = document.getElementById("board");
+      const message = document.getElementById("message");
+      const startButton = document.getElementById("start-button");
+      const clearButton = document.getElementById("clear-button");
+      const playerName = document.getElementById("player-name");
+      const rewardView = document.getElementById("reward-view");
+      const rewardEnabled = document.getElementById("reward-enabled");
+      const rewardType = document.getElementById("reward-type");
+      const rewardText = document.getElementById("reward-text");
+      const rewardFile = document.getElementById("reward-file");
+      const rewardNote = document.getElementById("reward-note");
+      const rewardSettingsKey = "memoria-en-foco-reward-settings";
+      const rewardScenes = [
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="a" x2="1" y2="1"><stop stop-color="#f8b4c8"/><stop offset="1" stop-color="#7663d8"/></linearGradient></defs><rect width="640" height="640" fill="url(#a)"/><circle cx="320" cy="320" r="180" fill="#fff" opacity=".22"/><path d="M320 95l44 137 137-44-80 120 120 80-145-12-12 145-56-134-134 56 70-128-128-70 145 12z" fill="#fff" opacity=".85"/><circle cx="320" cy="320" r="54" fill="#ffd66b"/></svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#99e2d0"/><stop offset="1" stop-color="#4f86c6"/></linearGradient></defs><rect width="640" height="640" fill="url(#b)"/><circle cx="476" cy="142" r="72" fill="#fff2b0"/><path d="M0 465l145-182 108 126 116-178 271 235v174H0z" fill="#345b74" opacity=".8"/><path d="M0 510l166-111 121 105 135-122 218 143v104H0z" fill="#274b52"/><path d="M0 557q160-45 320 5t320-2v80H0z" fill="#f3d9a5"/></svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="c" x2="1" y2="1"><stop stop-color="#ffe29a"/><stop offset="1" stop-color="#ff9a8b"/></linearGradient></defs><rect width="640" height="640" fill="url(#c)"/><circle cx="320" cy="320" r="205" fill="#fff" opacity=".2"/><path d="M320 134c-35 77-112 94-112 177 0 49 37 83 82 79-46 65-42 122 30 134 72-12 76-69 30-134 45 4 82-30 82-79 0-83-77-100-112-177z" fill="#fff8e6"/><path d="M320 262c-38 37-54 70-54 105a54 54 0 00108 0c0-35-16-68-54-105z" fill="#f48c72"/></svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><defs><linearGradient id="d" x2="0" y2="1"><stop stop-color="#b9a7f8"/><stop offset="1" stop-color="#f6c6d0"/></linearGradient></defs><rect width="640" height="640" fill="url(#d)"/><circle cx="320" cy="320" r="190" fill="#fff" opacity=".3"/><g fill="#fff"><path d="M320 158c28 48 52 68 103 76-37 37-47 65-36 116-48-28-79-28-127 0 11-51 1-79-36-116 51-8 75-28 96-76z"/><path d="M150 365c20 34 37 48 73 54-26 26-33 46-25 82-34-20-56-20-90 0 8-36 1-56-25-82 36-6 53-20 67-54z"/><path d="M490 365c20 34 37 48 73 54-26 26-33 46-25 82-34-20-56-20-90 0 8-36 1-56-25-82 36-6 53-20 67-54z"/></g><circle cx="320" cy="320" r="42" fill="#ffd66b"/></svg>`
+      ];
+
+      const cells = [];
+
+      let level = 1;
+      let streak = 0;
+      let attempt = 1;
+      let targets = new Set();
+      let selections = new Set();
+      let phase = "idle";
+      let revealTimer;
+
+      for (let i = 0; i < 64; i += 1) {
+        const cell = document.createElement("button");
+        cell.className = "cell";
+        cell.type = "button";
+        cell.setAttribute("aria-label", `Casilla ${i + 1}`);
+        cell.setAttribute("aria-pressed", "false");
+        cell.addEventListener("click", () => selectCell(i));
+        board.appendChild(cell);
+        cells.push(cell);
+      }
+
+      function targetCount() {
+        return Math.min(2 + level, 24);
+      }
+
+      function updateStats() {
+        document.getElementById("level").textContent = String(level);
+        document.getElementById("level-detail").textContent = `· ${targetCount()} casillas`;
+        document.getElementById("streak").textContent = String(streak);
+        document.getElementById("attempts").textContent = `Intento ${attempt} de 2`;
+      }
+
+      function setMessage(text, kind = "") {
+        message.textContent = text;
+        message.className = `message${kind ? ` ${kind}` : ""}`;
+      }
+
+      function resetCells() {
+        cells.forEach((cell) => {
+          cell.className = "cell";
+          cell.disabled = false;
+          cell.setAttribute("aria-pressed", "false");
+        });
+        selections.clear();
+        board.classList.remove("revealed");
+        rewardView.classList.remove("visible");
+        rewardView.replaceChildren();
+      }
+
+      function showPattern() {
+        window.clearTimeout(revealTimer);
+        resetCells();
+        phase = "showing";
+        targets.forEach((index) => cells[index].classList.add("lit"));
+        setMessage("Memoriza las casillas…");
+        startButton.disabled = true;
+        clearButton.disabled = true;
+        revealTimer = window.setTimeout(() => {
+          targets.forEach((index) => cells[index].classList.remove("lit"));
+          phase = "recall";
+          setMessage(`Tu turno: marca las ${targetCount()} casillas que viste.`);
+          clearButton.disabled = false;
+        }, 4000);
+      }
+
+      function beginRound() {
+        targets = new Set();
+        attempt = 1;
+        updateStats();
+        while (targets.size < targetCount()) {
+          targets.add(Math.floor(Math.random() * cells.length));
+        }
+        showPattern();
+      }
+
+      function selectCell(index) {
+        if (phase !== "recall") return;
+        const cell = cells[index];
+        if (selections.has(index)) {
+          selections.delete(index);
+          cell.classList.remove("chosen");
+          cell.setAttribute("aria-pressed", "false");
+        } else {
+          if (selections.size >= targetCount()) return;
+          selections.add(index);
+          cell.classList.add("chosen");
+          cell.setAttribute("aria-pressed", "true");
+        }
+        clearButton.disabled = selections.size === 0;
+        if (selections.size === targetCount()) checkAnswer();
+      }
+
+      function checkAnswer() {
+        phase = "checking";
+        clearButton.disabled = true;
+        const isCorrect = selections.size === targets.size &&
+          [...selections].every((index) => targets.has(index));
+
+        if (isCorrect) {
+          targets.forEach((index) => cells[index].classList.add("correct"));
+          streak += 1;
+          level += 1;
+          updateStats();
+          if (rewardEnabled.checked) {
+            showReward();
+            setMessage("¡Exacto! Aquí tienes tu recompensa.", "success");
+            revealTimer = window.setTimeout(beginRound, 2400);
+          } else {
+            setMessage("¡Exacto! Preparando el siguiente nivel…", "success");
+            revealTimer = window.setTimeout(beginRound, 1100);
+          }
+          return;
+        }
+
+        selections.forEach((index) => {
+          cells[index].classList.add(targets.has(index) ? "correct" : "wrong");
+        });
+        targets.forEach((index) => cells[index].classList.add("lit"));
+
+        if (attempt === 1) {
+          attempt = 2;
+          updateStats();
+          phase = "retry";
+          setMessage("No coincide. Observa de nuevo y tendrás otro intento.", "error");
+          startButton.textContent = "Ver de nuevo";
+          startButton.disabled = false;
+        } else {
+          phase = "finished";
+          setMessage(`Fin de la partida. Has completado ${streak} ${streak === 1 ? "ronda" : "rondas"}.`, "error");
+          saveScore();
+          document.getElementById("share-actions").hidden = false;
+          startButton.textContent = "Jugar otra vez";
+          startButton.disabled = false;
+        }
+      }
+
+      function clearSelection() {
+        if (phase !== "recall") return;
+        selections.forEach((index) => {
+          cells[index].classList.remove("chosen");
+          cells[index].setAttribute("aria-pressed", "false");
+        });
+        selections.clear();
+        clearButton.disabled = true;
+        setMessage(`Tu turno: marca las ${targetCount()} casillas que viste.`);
+      }
+
+      function showReward() {
+        board.classList.add("revealed");
+        rewardView.replaceChildren();
+        if (rewardType.value === "message") {
+          const text = document.createElement("div");
+          text.className = "reward-message";
+          text.textContent = rewardText.value.trim() || "¡Lo lograste! Sigue así.";
+          rewardView.appendChild(text);
+        } else {
+          const customImage = rewardType.value === "image"
+            ? localStorage.getItem(`${rewardSettingsKey}-image`)
+            : null;
+          if (rewardType.value === "image" && !customImage) {
+            const text = document.createElement("div");
+            text.className = "reward-message";
+            text.textContent = "Elige una imagen en los ajustes para personalizar tu recompensa.";
+            rewardView.appendChild(text);
+          } else {
+            const image = document.createElement("img");
+            image.alt = rewardType.value === "image" ? "Tu imagen de recompensa" : "Ilustración sorpresa";
+            image.src = customImage || createScene();
+            rewardView.appendChild(image);
+          }
+        }
+        requestAnimationFrame(() => rewardView.classList.add("visible"));
+      }
+
+      function createScene() {
+        const svg = rewardScenes[Math.floor(Math.random() * rewardScenes.length)];
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      }
+
+      function updateRewardFields() {
+        document.getElementById("reward-message-field").hidden = rewardType.value !== "message";
+        document.getElementById("reward-image-field").hidden = rewardType.value !== "image";
+        if (rewardType.value === "image") {
+          rewardNote.textContent = localStorage.getItem(`${rewardSettingsKey}-image`)
+            ? "La imagen queda guardada solo en este navegador."
+            : "Elige una imagen de hasta 1,5 MB; no se sube a internet.";
+        } else if (rewardType.value === "message") {
+          rewardNote.textContent = "Tu mensaje se guarda solo en este navegador.";
+        } else {
+          rewardNote.textContent = "Ilustraciones originales incluidas; funcionan sin conexión.";
+        }
+      }
+
+      function saveRewardSettings() {
+        const settings = {
+          enabled: rewardEnabled.checked,
+          type: rewardType.value,
+          text: rewardText.value
+        };
+        try {
+          localStorage.setItem(rewardSettingsKey, JSON.stringify(settings));
+        } catch (error) {
+          console.error("No se pudieron guardar los ajustes de recompensa.", error);
+          rewardNote.textContent = "No se pudieron guardar los ajustes en este navegador.";
+        }
+      }
+
+      function loadRewardSettings() {
+        try {
+          const settings = JSON.parse(localStorage.getItem(rewardSettingsKey) || "{}");
+          if (typeof settings.enabled === "boolean") rewardEnabled.checked = settings.enabled;
+          if (["gallery", "message", "image"].includes(settings.type)) rewardType.value = settings.type;
+          if (typeof settings.text === "string") rewardText.value = settings.text;
+        } catch (error) {
+          console.error("No se pudieron leer los ajustes de recompensa.", error);
+          rewardNote.textContent = "No se pudieron leer los ajustes guardados; se usarán los valores iniciales.";
+        }
+        updateRewardFields();
+      }
+
+      async function shareResult() {
+        const name = playerName.value.trim() || "Anónimo";
+        const result = `🧠 ${name} completó ${streak} ${streak === 1 ? "ronda" : "rondas"} en Memoria en foco. ¿Puedes superar su reto?`;
+        const status = document.getElementById("share-status");
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: "Mi resultado en Memoria en foco", text: result });
+            status.textContent = "¡Resultado compartido!";
+          } else if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(result);
+            status.textContent = "Resultado copiado. ¡Compártelo donde quieras!";
+          } else {
+            status.textContent = result;
+          }
+        } catch (error) {
+          if (error.name === "AbortError") return;
+          console.error("No se pudo compartir el resultado.", error);
+          status.textContent = result;
+        }
+      }
+
+      function getScores() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          if (!Array.isArray(stored)) throw new Error("Formato de récords no válido");
+          return stored.filter((entry) =>
+            entry && typeof entry.name === "string" &&
+            Number.isInteger(entry.score) && entry.score > 0 &&
+            typeof entry.date === "string"
+          );
+        } catch (error) {
+          console.error("No se pudieron leer los récords guardados.", error);
+          return [];
+        }
+      }
+
+      function renderScores() {
+        const scores = getScores().sort((a, b) => b.score - a.score).slice(0, 5);
+        const record = document.getElementById("record");
+        const leaderboard = document.getElementById("leaderboard");
+        if (!scores.length) {
+          record.innerHTML = '<div class="record-label">Mejor récord</div><p class="empty-record">¡Juega una partida para inaugurar la tabla!</p>';
+          leaderboard.replaceChildren();
+          return;
+        }
+        const top = scores[0];
+        record.innerHTML = `<div class="record-label">Mejor récord</div>
+          <div class="record-row"><span class="record-name"></span><span class="record-score">${top.score} ${top.score === 1 ? "ronda" : "rondas"}</span></div>
+          <div class="record-date">${new Date(top.date).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" })}</div>`;
+        record.querySelector(".record-name").textContent = top.name;
+
+        leaderboard.innerHTML = '<div class="leaderboard-title">Mejores partidas</div>';
+        scores.forEach((entry, index) => {
+          const row = document.createElement("div");
+          row.className = "score-row";
+          const person = document.createElement("div");
+          person.className = "score-person";
+          const rank = document.createElement("span");
+          rank.className = "rank";
+          rank.textContent = String(index + 1);
+          const name = document.createElement("span");
+          name.className = "score-name";
+          name.textContent = entry.name;
+          const points = document.createElement("span");
+          points.className = "score-points";
+          points.textContent = `${entry.score} ${entry.score === 1 ? "ronda" : "rondas"}`;
+          person.append(rank, name);
+          row.append(person, points);
+          leaderboard.appendChild(row);
+        });
+      }
+
+      function saveScore() {
+        if (streak === 0) return;
+        const name = playerName.value.trim() || "Anónimo";
+        const scores = getScores();
+        scores.push({ name, score: streak, date: new Date().toISOString() });
+        scores.sort((a, b) => b.score - a.score);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(scores.slice(0, 5)));
+        } catch (error) {
+          console.error("No se pudo guardar el récord.", error);
+          setMessage("Partida terminada, pero no se pudo guardar el récord en este navegador.", "error");
+        }
+        renderScores();
+      }
+
+      startButton.addEventListener("click", () => {
+        if (phase === "idle" || phase === "finished") {
+          level = 1;
+          streak = 0;
+          document.getElementById("share-actions").hidden = true;
+          document.getElementById("share-status").textContent = "";
+          startButton.textContent = "Empezar";
+        }
+        if (phase === "retry") {
+          startButton.textContent = "Empezar";
+          showPattern();
+          return;
+        }
+        updateStats();
+        beginRound();
+      });
+
+      clearButton.addEventListener("click", clearSelection);
+      document.getElementById("share-button").addEventListener("click", shareResult);
+      rewardEnabled.addEventListener("change", saveRewardSettings);
+      rewardType.addEventListener("change", () => {
+        updateRewardFields();
+        saveRewardSettings();
+      });
+      rewardText.addEventListener("input", saveRewardSettings);
+      rewardFile.addEventListener("change", () => {
+        const file = rewardFile.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          rewardNote.textContent = "El archivo elegido no es una imagen.";
+          return;
+        }
+        if (file.size > 1_500_000) {
+          rewardNote.textContent = "La imagen debe pesar menos de 1,5 MB para guardarse en este navegador.";
+          rewardFile.value = "";
+          return;
+        }
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          try {
+            localStorage.setItem(`${rewardSettingsKey}-image`, reader.result);
+            rewardNote.textContent = `${file.name} quedó guardada en este navegador.`;
+          } catch (error) {
+            console.error("No se pudo guardar la imagen de recompensa.", error);
+            rewardNote.textContent = "No se pudo guardar la imagen. Prueba con un archivo más pequeño.";
+          }
+        });
+        reader.addEventListener("error", () => {
+          console.error("No se pudo leer la imagen de recompensa.", reader.error);
+          rewardNote.textContent = "No se pudo leer la imagen elegida.";
+        });
+        reader.readAsDataURL(file);
+      });
+      loadRewardSettings();
+      playerName.value = localStorage.getItem(`${STORAGE_KEY}-name`) || "";
+      playerName.addEventListener("input", () => {
+        try {
+          localStorage.setItem(`${STORAGE_KEY}-name`, playerName.value);
+        } catch (error) {
+          console.error("No se pudo guardar el nombre del jugador.", error);
+        }
+      });
+      updateStats();
+      renderScores();
+    })();
+  </script>
+</body>
+</html>
